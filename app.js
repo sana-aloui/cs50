@@ -83,7 +83,9 @@ const container = document.querySelector(".btn-container");
 
 window.addEventListener("DOMContentLoaded", () => {
 	displayCourseItems(courses);
+	Storage.saveCourses(courses);
 	displayCourseButtons();
+	getBagButtons();
 });
 
 function displayCourseButtons() {
@@ -148,12 +150,59 @@ function displayCourseItems(courseItems) {
 			<div class="ovale">
 				<p class="price">$${course.price}</p>
 			</div>
-			<p>
+			<button class="bag-btn" data-id=${course.id}>
 				<i class="fa fa-cart-plus cart panier"></i>
-			</p>
+			</button>
 		</div>   
 	</div>`;
 	});
 	displayCourses = displayCourses.join("");
 	sectionCenter.innerHTML = displayCourses;
+}
+
+// Add to cart
+let cart = [];
+let buttonsDOM = [];
+const cartBtn = document.querySelector(".cart-btn");
+const closeCartBtn = document.querySelector(".close-cart");
+const clearCartBtn = document.querySelector(".clear-cart");
+const CartDOM = document.querySelector(".cart");
+const CartOverlay = document.querySelector(".cart-overlay");
+const CartItems = document.querySelector(".cart-items");
+const CartTotal = document.querySelector(".cart-total");
+const CartContent = document.querySelector(".cart-content");
+
+class Storage {
+	static saveCourses(courses) {
+		localStorage.setItem("courses", JSON.stringify(courses));
+	}
+	static getCourses(id) {
+		let courses = JSON.parse(localStorage.getItem("courses"));
+		return courses.find((course) => course.id === id);
+	}
+}
+// function getCourses(id) {
+// 	let data = JSON.parse(localStorage.getItem("courses"));
+// 	// console.log("data", JSON.parse(data));
+// }
+
+function getBagButtons() {
+	const buttons = [...document.querySelectorAll(".bag-btn")];
+	buttonsDOM = buttons;
+	buttons.forEach((button) => {
+		let id = button.dataset.id;
+		let inCart = cart.find((item) => item.id === id);
+
+		if (inCart) {
+			button.innerText = "In Cart";
+			button.disabled = true;
+		}
+		button.addEventListener("click", (e) => {
+			e.target.innerText = "In Cart";
+			e.target.disabled = true;
+			// get course from courses
+			let cartItem = Storage.getCourses(id);
+			console.log(cartItem);
+		});
+	});
 }
