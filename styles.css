@@ -555,7 +555,7 @@ label {
 	padding: 8px;
 }
 
-.cart-item-count {
+.cart-items {
 	position: absolute;
 	top: 4px;
 	right: -5px;
@@ -625,6 +625,13 @@ label {
 	transform: translateX(100%);
 }
 
+.showCart {
+	transform: translateX(0);
+}
+.transparentBcg {
+	visibility: visible;
+}
+
 /* @media screen and (min-width: 768px) {
 	.cart {
 		width: 30vw;
@@ -668,9 +675,9 @@ label {
 .item-amount {
 	text-align: center;
 }
-.remove-item {
+/* .remove-item {
 	color: grey;
 	cursor: pointer;
-}
+} */
 
 /* End of cart  */

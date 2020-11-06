@@ -22,7 +22,7 @@ window.addEventListener("load", () => {
 // courses
 const courses = [
 	{
-		id: 5,
+		id: "5",
 		title: "GUITAR FOR BEGINNERS",
 		instructor: "David",
 		category: "business",
@@ -31,7 +31,7 @@ const courses = [
 		img: "./images/item-3.jpg",
 	},
 	{
-		id: 1,
+		id: "1",
 		title: "The arts of photography",
 		instructor: "Georgie",
 		category: "photography",
@@ -40,7 +40,7 @@ const courses = [
 		img: "images/item-1.jpg",
 	},
 	{
-		id: 2,
+		id: "2",
 		title: "PIANO LESSON",
 		instructor: "Sana",
 		category: "music",
@@ -49,7 +49,7 @@ const courses = [
 		img: "./images/item-2.jpg",
 	},
 	{
-		id: 3,
+		id: "3",
 		title: "GUITAR FOR BEGINNERS",
 		instructor: "David",
 		category: "music",
@@ -58,7 +58,7 @@ const courses = [
 		img: "./images/item-3.jpg",
 	},
 	{
-		id: 4,
+		id: "4",
 		title: "GUITAR FOR BEGINNERS",
 		instructor: "David",
 		category: "paint",
@@ -68,7 +68,7 @@ const courses = [
 	},
 
 	{
-		id: 6,
+		id: "6",
 		title: "GUITAR FOR BEGINNERS",
 		instructor: "David",
 		category: "acting",
@@ -83,9 +83,11 @@ const container = document.querySelector(".btn-container");
 
 window.addEventListener("DOMContentLoaded", () => {
 	displayCourseItems(courses);
+	setupAPP();
 	Storage.saveCourses(courses);
 	displayCourseButtons();
 	getBagButtons();
+	cartLogic();
 });
 
 function displayCourseButtons() {
@@ -166,11 +168,11 @@ let buttonsDOM = [];
 const cartBtn = document.querySelector(".cart-btn");
 const closeCartBtn = document.querySelector(".close-cart");
 const clearCartBtn = document.querySelector(".clear-cart");
-const CartDOM = document.querySelector(".cart");
-const CartOverlay = document.querySelector(".cart-overlay");
-const CartItems = document.querySelector(".cart-items");
-const CartTotal = document.querySelector(".cart-total");
-const CartContent = document.querySelector(".cart-content");
+const cartDOM = document.querySelector(".cart");
+const cartOverlay = document.querySelector(".cart-overlay");
+const cartItems = document.querySelector(".cart-items");
+const cartTotal = document.querySelector(".cart-total");
+const cartContent = document.querySelector(".cart-content");
 
 class Storage {
 	static saveCourses(courses) {
@@ -180,11 +182,15 @@ class Storage {
 		let courses = JSON.parse(localStorage.getItem("courses"));
 		return courses.find((course) => course.id === id);
 	}
+	static saveCart(cart) {
+		localStorage.setItem("cart", JSON.stringify(cart));
+	}
+	static getCart() {
+		return localStorage.getItem("cart")
+			? JSON.parse(localStorage.getItem("cart"))
+			: [];
+	}
 }
-// function getCourses(id) {
-// 	let data = JSON.parse(localStorage.getItem("courses"));
-// 	// console.log("data", JSON.parse(data));
-// }
 
 function getBagButtons() {
 	const buttons = [...document.querySelectorAll(".bag-btn")];
@@ -201,8 +207,116 @@ function getBagButtons() {
 			e.target.innerText = "In Cart";
 			e.target.disabled = true;
 			// get course from courses
-			let cartItem = Storage.getCourses(id);
-			console.log(cartItem);
+			let cartItem = { ...Storage.getCourses(id), amount: 1 };
+			// console.log(cartItem);
+			// add this item to the empty cart
+			cart = [...cart, cartItem];
+			// console.log(cart);
+			// save cart in local storage
+			Storage.saveCart(cart);
+
+			// set cart values
+			setCartValues(cart);
+			addCartItem(cartItem);
+			// show the cart
+			showCart();
 		});
 	});
+}
+
+function setCartValues(cart) {
+	let tempTotal = 0;
+	let itemsTotal = 0;
+	cart.map((item) => {
+		tempTotal += item.price * item.amount;
+		itemsTotal += item.amount;
+	});
+	cartTotal.innerText = parseFloat(tempTotal.toFixed(2));
+	cartItems.innerText = itemsTotal;
+	// console.log(cartTotal, cartItems);
+}
+
+function addCartItem(item) {
+	const div = document.createElement("div");
+	div.classList.add("cart-item");
+	div.innerHTML = `<img src=${item.img} alt="" />
+	<h3 class="cart__item__name">${item.title}</h3>
+	<h3 class="cart__item__price">$${item.price}</h3>
+	<span class="remove-item" data-id =${item.id}>
+		remove
+	</span>
+	`;
+	cartContent.appendChild(div);
+	// console.log(cartContent);
+}
+
+function showCart() {
+	cartOverlay.classList.add("transparentBcg");
+	cartDOM.classList.add("showCart");
+}
+function setupAPP() {
+	cart = Storage.getCart();
+	setCartValues(cart);
+	populateCart(cart);
+	cartBtn.addEventListener("click", () => {
+		showCart();
+	});
+	closeCartBtn.addEventListener("click", () => {
+		hideCart();
+	});
+}
+
+function populateCart(cart) {
+	cart.forEach((item) => addCartItem(item));
+}
+
+function hideCart() {
+	cartOverlay.classList.remove("transparentBcg");
+	cartDOM.classList.remove("showCart");
+}
+
+function cartLogic() {
+	// clear cart button
+	clearCartBtn.addEventListener("click", () => {
+		clearCart();
+	});
+	// cart functionality
+	cartContent.addEventListener("click", (e) => {
+		// console.log(e.target);
+
+		let removeItem = e.target;
+		let id = removeItem.dataset.id;
+		cart = cart.filter((item) => item.id !== id);
+		setCartValues(cart);
+		Storage.saveCart(cart);
+		cartContent.removeChild(removeItem.parentElement);
+		let button = getSingleButton(id);
+		button.disabled = false;
+		button.innerHTML = `<i class = "fa fa-shopping-cart">Add</i>`;
+		console.log(id);
+	});
+}
+
+function clearCart() {
+	let cartItems = cart.map((item) => item.id);
+	// console.log(cartItems);
+	cartItems.forEach((id) => removeItem(id));
+	// console.log(cartContent.children);
+	while (cartContent.children.length > 0) {
+		cartContent.removeChild(cartContent.children[0]);
+		hideCart();
+	}
+}
+
+function removeItem(id) {
+	cart = cart.filter((item) => item.id != id);
+	setCartValues(cart);
+	Storage.saveCart(cart);
+	let button = getSingleButton(id);
+	button.disabled = false;
+	button.innerHTML = `<i class = "fa fa-shopping-cart">Add</i>`;
+}
+
+function getSingleButton(id) {
+	return buttonsDOM.find((button) => button.dataset.id === id);
 }
